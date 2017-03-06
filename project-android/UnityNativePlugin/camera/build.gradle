@@ -22,3 +22,30 @@ dependencies {
     provided files('./libs/classes.jar')
     compile 'com.android.support:support-core-utils:25.2.0'
 }
+
+android.libraryVariants.all { variant ->
+
+    String variantName = "${variant.name.capitalize()}";
+    String deployTaskGroup = "plugin";
+    String deployTaskName = "deploy${variantName}PluginArchive";
+    String dependencyTaskName = "assemble${variantName}";
+
+    String sourceAARFolder = "${buildDir.getPath()}/outputs/aar/";
+    String sourceAARName = "${project.name}-${variant.name}.aar";
+
+    // change this if you have a different folder structure
+    String targetAssetFolder = "../project-unity/unity-native-plugin/Assets/AddComponent/Android/";
+    String targetAARFolder = "${rootDir.getPath()}/../${targetAssetFolder}";
+    String targetAARName = "native-camera.aar";
+
+    task(deployTaskName, dependsOn: dependencyTaskName, type: Copy) {
+        logger.lifecycle("${variant.name.capitalize()} AAR Folder: ${sourceAARFolder}")
+        logger.lifecycle("${variant.name.capitalize()} Target AAR Folder: ${targetAARFolder}")
+        logger.lifecycle("${variant.name.capitalize()} Target AAR name: ${targetAARName}")
+
+        from(sourceAARFolder)
+        into(targetAARFolder)
+        include(sourceAARName)
+        rename(sourceAARName, targetAARName)
+    }.group = deployTaskGroup;
+}
