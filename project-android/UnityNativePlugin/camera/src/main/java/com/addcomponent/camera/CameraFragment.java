@@ -15,6 +15,8 @@ import com.unity3d.player.UnityPlayer;
 import java.io.File;
 import java.io.IOException;
 
+import static android.app.Activity.RESULT_OK;
+
 /**
  * Created by tomazsaraiva on 05/03/2017.
  */
@@ -22,6 +24,8 @@ import java.io.IOException;
 public class CameraFragment extends Fragment {
 
     public static final String TAG = "camera_fragment";
+
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
 
     String _gameObject;
     String _callback;
@@ -64,6 +68,15 @@ public class CameraFragment extends Fragment {
 
                         _path = file.getAbsolutePath();
 
+                        // get the file uri using the file provider and give write permission
+                        Uri photoURI = FileProvider.getUriForFile(UnityPlayer.currentActivity,
+                                "com.addcomponent.camera.provider",
+                                file);
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+                        // start the camera activity
+                        this.startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
 
                     } else {
                         Log.d(TAG, "FAILED file: " + file.getAbsolutePath());
@@ -76,6 +89,16 @@ public class CameraFragment extends Fragment {
             } else {
                 Log.d(TAG, "FAILED dir: " + dir.getAbsolutePath());
             }
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_IMAGE_CAPTURE) {
+            // if RESULT_OK send the image path to Unity, otherwise send an empty path
+            UnityPlayer.UnitySendMessage(_gameObject, _callback, resultCode == RESULT_OK ? _path : "");
         }
     }
 }
